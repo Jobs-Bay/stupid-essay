@@ -298,40 +298,40 @@ class STAR_RIS_env(object):
         H_dt_LOS = np.zeros((self.antenna_num, self.target_num), dtype=complex)
         for i in range(self.target_num):
             for n in range(self.antenna_num):
-                H_dt_LOS[n, i] = self.PL_BS2target[i] * np.cos(-n * math.pi * np.sin(self.BS2target[i])) - self.PL_BS2target[i] * 1j * np.sin(-n * math.pi * np.sin(self.BS2target[i]))
+                H_dt_LOS[n, i] = self.PL_BS2target[i] * np.cos(n * math.pi * np.sin(self.BS2target[i])) + self.PL_BS2target[i] * 1j * np.sin(n * math.pi * np.sin(self.BS2target[i]))
         H_dt = H_dt_LOS
 
         # 生成一个大小为天线数*元素数的复矩阵，其中每一列的元素为cos(-n*pi*sin(BS2STAR_RIS))-1j*sin(-n*pi*sin(BS2STAR_RIS))，赋值给G
         G = np.zeros((self.antenna_num, self.element_num), dtype=complex)
         for i in range(self.element_num):
             for n in range(self.antenna_num):
-                G[n, i] = self.PL_BS2STAR_RIS * np.cos(-n * math.pi * np.sin(self.BS2STAR_RIS)) - self.PL_BS2STAR_RIS * 1j * np.sin(-n * math.pi * np.sin(self.BS2STAR_RIS))
+                G[n, i] = self.PL_BS2STAR_RIS * np.cos(n * math.pi * np.sin(self.BS2STAR_RIS)) + self.PL_BS2STAR_RIS * 1j * np.sin(n * math.pi * np.sin(self.BS2STAR_RIS))
 
         # 生成一个大小为天线数*用户数的服从复高斯分布的矩阵，赋值给H_du_outdoor
         H_du = np.zeros((self.antenna_num, self.user_num), dtype=complex)
         for i in range(self.user_num):
             for n in range(self.antenna_num):
-                H_du[n, i] = self.PL_BS2user[i] * np.cos(-n * math.pi * np.sin(self.BS2user[i])) - self.PL_BS2user[i] * 1j * np.sin(-n * math.pi * np.sin(self.BS2user[i]))
+                H_du[n, i] = self.PL_BS2user[i] * np.cos(n * math.pi * np.sin(self.BS2user[i])) + self.PL_BS2user[i] * 1j * np.sin(n * math.pi * np.sin(self.BS2user[i]))
 
         H_de = np.zeros((self.antenna_num, self.eve_num), dtype=complex)
         for i in range(self.eve_num):
             for n in range(self.antenna_num):
-                H_de[n, i] = self.PL_BS2eve[i] * np.cos(-n * math.pi * np.sin(self.BS2eve[i])) - self.PL_BS2eve[
-                    i] * 1j * np.sin(-n * math.pi * np.sin(self.BS2eve[i]))
+                H_de[n, i] = self.PL_BS2eve[i] * np.cos(n * math.pi * np.sin(self.BS2eve[i])) + self.PL_BS2eve[
+                    i] * 1j * np.sin(n * math.pi * np.sin(self.BS2eve[i]))
 
         """STAR-RIS侧"""
         # 生成一个大小为元素数*目标数的复矩阵，其中每一列的元素为cos(-n*pi*sin(STAR_RIS2target[i]))-1j*sin(-n*pi*sin(STAR_RIS2target[i]))，赋值给H_rt_LOS
         H_rt_LOS = np.zeros((self.element_num, self.target_num), dtype=complex)
         for i in range(self.target_num):
             for n in range(self.element_num):
-                H_rt_LOS[n, i] = self.PL_STAR_RIS2target[i] * np.cos(-n * math.pi * np.sin(self.STAR_RIS2target[i])) - self.PL_STAR_RIS2target[i] * 1j * np.sin(-n * math.pi * np.sin(self.STAR_RIS2target[i]))
+                H_rt_LOS[n, i] = self.PL_STAR_RIS2target[i] * np.cos(n * math.pi * np.sin(self.STAR_RIS2target[i])) + self.PL_STAR_RIS2target[i] * 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2target[i]))
         H_rt = H_rt_LOS
 
         # 生成一个大小为元素数*室外用户数的复矩阵，其中每一列的元素为cos(-n*pi*sin(STAR_RIS2outdoor_user[i]))-1j*sin(-n*pi*sin(STAR_RIS2outdoor_user[i]))，赋值给H_ru_LOS
         H_ru_LOS = np.zeros((self.element_num, self.outdoor_user_num), dtype=complex)
         for i in range(self.outdoor_user_num):
             for n in range(self.element_num):
-                H_ru_LOS[n, i] = np.cos(-n * math.pi * np.sin(self.STAR_RIS2outdoor_user[i])) - 1j * np.sin(-n * math.pi * np.sin(self.STAR_RIS2outdoor_user[i]))
+                H_ru_LOS[n, i] = np.cos(n * math.pi * np.sin(self.STAR_RIS2outdoor_user[i])) + 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2outdoor_user[i]))
         # 生成一个大小为元素数*室外用户数的服从高斯分布的复矩阵，赋值给H_ru_NLOS
         H_ru_NLOS = np.random.randn(self.element_num, self.outdoor_user_num) + 1j * np.random.randn(self.element_num, self.outdoor_user_num)
         H_ru_outdoor = math.sqrt(self.K / (self.K + 1)) * H_ru_LOS + math.sqrt(1 / (self.K + 1)) * H_ru_NLOS
@@ -343,7 +343,7 @@ class STAR_RIS_env(object):
         H_ru_LOS = np.zeros((self.element_num, self.indoor_user_num), dtype=complex)
         for i in range(self.indoor_user_num):
             for n in range(self.element_num):
-                H_ru_LOS[n, i] = np.cos(-n * math.pi * np.sin(self.STAR_RIS2indoor_user[i])) - 1j * np.sin(-n * math.pi * np.sin(self.STAR_RIS2indoor_user[i]))
+                H_ru_LOS[n, i] = np.cos(n * math.pi * np.sin(self.STAR_RIS2indoor_user[i])) + 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2indoor_user[i]))
         # 生成一个大小为元素数*室外用户数的服从高斯分布的复矩阵，赋值给H_ru_NLOS
         H_ru_NLOS = np.random.randn(self.element_num, self.indoor_user_num) + 1j * np.random.randn(self.element_num, self.indoor_user_num)
         H_ru_indoor = math.sqrt(self.K / (self.K + 1)) * H_ru_LOS + math.sqrt(1 / (self.K + 1)) * H_ru_NLOS
@@ -357,7 +357,7 @@ class STAR_RIS_env(object):
         H_rf_LOS = np.zeros((self.element_num, self.outdoor_eve_num), dtype=complex)
         for i in range(self.outdoor_eve_num):
             for n in range(self.element_num):
-                H_rf_LOS[n, i] = np.cos(-n * math.pi * np.sin(self.STAR_RIS2outdoor_eve[i])) - 1j * np.sin(-n * math.pi * np.sin(self.STAR_RIS2outdoor_eve[i]))
+                H_rf_LOS[n, i] = np.cos(n * math.pi * np.sin(self.STAR_RIS2outdoor_eve[i])) + 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2outdoor_eve[i]))
         # 生成一个大小为元素数*室外窃听者数的服从高斯分布的复矩阵
         H_rf_NLOS = np.random.randn(self.element_num, self.outdoor_eve_num) + 1j * np.random.randn(self.element_num, self.outdoor_eve_num)
         H_rf_outdoor = self.PL_STAR_RIS2outdoor_eve * math.sqrt(self.K / (self.K + 1)) * H_rf_LOS + math.sqrt(1 / (self.K + 1)) * H_rf_NLOS
@@ -365,7 +365,7 @@ class STAR_RIS_env(object):
         H_rf_LOS = np.zeros((self.element_num, self.indoor_eve_num), dtype=complex)
         for i in range(self.indoor_eve_num):
             for n in range(self.element_num):
-                H_rf_LOS[n, i] = np.cos(-n * math.pi * np.sin(self.STAR_RIS2indoor_eve[i])) - 1j * np.sin(-n * math.pi * np.sin(self.STAR_RIS2indoor_eve[i]))
+                H_rf_LOS[n, i] = np.cos(n * math.pi * np.sin(self.STAR_RIS2indoor_eve[i])) + 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2indoor_eve[i]))
         # 生成一个大小为元素数*室内窃听者数的服从高斯分布的复矩阵
         H_rf_NLOS = np.random.randn(self.element_num, self.indoor_eve_num) + 1j * np.random.randn(self.element_num, self.indoor_eve_num)
         H_rf_indoor = self.PL_STAR_RIS2indoor_eve * math.sqrt(self.K / (self.K + 1)) * H_rf_LOS + math.sqrt(1 / (self.K + 1)) * H_rf_NLOS

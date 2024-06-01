@@ -271,7 +271,7 @@ class STAR_RIS_env(object):
         indoor_eve_loc = np.vstack((indoor_eve_loc_x, indoor_eve_loc_y)).T
         # 室外用户的位置横坐标取值范围为[-15,-10],室外窃听者[-15,-10]
         outdoor_user_loc_x = np.random.randint(-15, -4, self.outdoor_user_num)
-        outdoor_eve_loc_x = np.random.randint(-30, -20, self.outdoor_eve_num)
+        outdoor_eve_loc_x = np.random.randint(-20, -15, self.outdoor_eve_num)
         # 室外用户坐标纵坐标取值范围为[0, 10],室外窃听者[0,10]
         outdoor_user_loc_y = np.random.randint(5, 19, self.outdoor_user_num)
         outdoor_eve_loc_y = np.random.randint(-8, -2, self.outdoor_eve_num)

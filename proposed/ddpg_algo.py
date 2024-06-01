@@ -194,7 +194,7 @@ for i in range(MAX_EPISODES):
         # a_list.append(a)
         # eta_list.append(eta)
         if j == MAX_EP_STEPS - 1:
-            print('Episode:', i, ' Steps: %2d' % j, ' Reward: %7.2f' % ep_reward, 'Explore: %.3f' % var, 'Average reward: %.2f' % np.mean(ep_reward_list), 'Average eta: %.2f' % np.mean(eta_list_list))
+            print('Episode:', i, ' Steps: %2d' % j, ' Reward: %7.2f' % ep_reward, 'Explore: %.3f' % var, 'Average reward: %.2f' % np.mean(ep_reward_list), 'episode eta: %.2f' % ep_eta)
             ep_reward_list = np.append(ep_reward_list, ep_reward)
             avg_reward_list = np.append(avg_reward_list, np.mean(ep_reward_list))
             rad_list_list.append(rad_list)

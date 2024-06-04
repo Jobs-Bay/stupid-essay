@@ -165,7 +165,7 @@ class STAR_RIS_env(object):
                 reward = 0.5 * reward
                 break
         for i in range(self.target_num):
-            if SNR_t[i] < 0.5:
+            if SNR_t[i] < 1:
                 reward = 0.5 * reward
                 break
 

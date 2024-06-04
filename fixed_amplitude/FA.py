@@ -194,7 +194,7 @@ for i in range(MAX_EPISODES):
         # a_list.append(a)
         # eta_list.append(eta)
         if j == MAX_EP_STEPS - 1:
-            print('Episode:', i, ' Steps: %2d' % j, ' Reward: %7.2f' % ep_reward, 'Explore: %.3f' % var, 'Average reward: %.2f' % np.mean(ep_reward_list), 'episode eta: %.2f' % ep_eta)
+            print('Episode:', i, ' Steps: %2d' % j, ' Reward: %7.2f' % ep_reward, 'Explore: %.3f' % var, 'Average reward: %.2f' % np.mean(ep_reward_list), 'episode eta: %.2f' % np.mean(eta_list_list))
             ep_reward_list = np.append(ep_reward_list, ep_reward)
             avg_reward_list = np.append(avg_reward_list, np.mean(ep_reward_list))
             rad_list_list.append(rad_list)
@@ -220,7 +220,7 @@ for i in range(MAX_EPISODES):
 # folder_path = f"./DDPG/数据/proposed/alpha=0.33,beta=0.33,gamma=0.33/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
 # folder_path = f"./DDPG/数据/MRT/alpha=0.45,beta=0.45,gamma=0.1/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power_limit},T={env.target_num},F={env.eve_num}"
 # folder_path = f"./DDPG/数据/proposed_eta_objective/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
-folder_path = f"./数据/utility_targ_not_eve/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
+folder_path = f"./数据/FA/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
 
 
 # 确保文件夹存在，如果不存在则创建

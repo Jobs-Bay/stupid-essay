@@ -24,8 +24,8 @@ from STAR_RIS_env import STAR_RIS_env
 MAX_EPISODES = 2000
 # MAX_EPISODES = 50000
 
-LR_A = 0.001  # learning rate for actor
-LR_C = 0.002  # learning rate for critic
+LR_A = 0.0001  # learning rate for actor
+LR_C = 0.0002  # learning rate for critic
 # LR_A = 0.1  # learning rate for actor
 # LR_C = 0.2  # learning rate for critic
 GAMMA = 0.001  # optimal reward discount
@@ -132,10 +132,10 @@ class DDPG(object):
 
 
 ###############################  training  ####################################
-np.random.seed(3407)
-tf.set_random_seed(3407)
+np.random.seed(3)
+tf.set_random_seed(3)
 
-env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=30, power_limit=30, target_num=4, eve_num=1)
+env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=30, power_limit=26, target_num=4, eve_num=1)
 MAX_EP_STEPS = 1000
 s_dim = env.state_dim
 a_dim = env.action_dim
@@ -191,10 +191,10 @@ for i in range(MAX_EPISODES):
         rad_list.append(sum_rad)
         sec_list.append(sum_sec)
         P_list.append(P)
-        # a_list.append(a)
+        a_list.append(a)
         # eta_list.append(eta)
         if j == MAX_EP_STEPS - 1:
-            print('Episode:', i, ' Steps: %2d' % j, ' Reward: %7.2f' % ep_reward, 'Explore: %.3f' % var, 'Average reward: %.2f' % np.mean(ep_reward_list), 'episode eta: %.2f' % ep_eta)
+            print('Episode:', i, ' Steps: %2d' % j, ' Reward: %7.2f' % ep_reward, 'Explore: %.3f' % var, 'Average reward: %.2f' % np.mean(ep_reward_list), 'episode eta: %.2f' % np.mean(eta_list_list))
             ep_reward_list = np.append(ep_reward_list, ep_reward)
             avg_reward_list = np.append(avg_reward_list, np.mean(ep_reward_list))
             rad_list_list.append(rad_list)
@@ -230,7 +230,7 @@ file_path2 = os.path.join(folder_path, "rad_list_list.npy")
 file_path3 = os.path.join(folder_path, "sec_list_list.npy")
 file_path4 = os.path.join(folder_path, "P_list_list.npy")
 file_path5 = os.path.join(folder_path, "eta_list_list.npy")
-# file_path6 = os.path.join(folder_path, "a_list.npy")
+file_path6 = os.path.join(folder_path, "a_list.npy")
 np.save(file_path1, ep_reward_list)
 np.save(file_path2, rad_list_list)
 np.save(file_path3, sec_list_list)

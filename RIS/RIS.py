@@ -20,11 +20,11 @@ import matplotlib.pyplot as plt
 from conventional import STAR_RIS_env
 
 #####################  hyper parameters  ####################
-MAX_EPISODES = 1000
+MAX_EPISODES = 2000
 # MAX_EPISODES = 50000
 
 LR_A = 0.0001  # learning rate for actor
-LR_C = 0.0001  # learning rate for critic
+LR_C = 0.0002  # learning rate for critic
 # LR_A = 0.1  # learning rate for actor
 # LR_C = 0.2  # learning rate for critic
 GAMMA = 0.001  # optimal reward discount
@@ -131,8 +131,8 @@ class DDPG(object):
 
 
 ###############################  training  ####################################
-np.random.seed(3407)
-tf.set_random_seed(3407)
+np.random.seed(1)
+tf.set_random_seed(1)
 
 env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=30, power_limit=30, target_num=4, eve_num=1)
 MAX_EP_STEPS = 1000
@@ -235,7 +235,7 @@ np.save(file_path2, rad_list_list)
 np.save(file_path3, sec_list_list)
 np.save(file_path4, P_list_list)
 np.save(file_path5, eta_list_list)
-np.save(file_path6, a_list)
+# np.save(file_path6, a_list)
 # 将ep_reward_list和avg_reward_list的曲线画到一张图上，并标注
 # plt.plot(ep_reward_list, label='ep_reward_list')
 plt.plot(avg_reward_list, label='avg_reward_list')

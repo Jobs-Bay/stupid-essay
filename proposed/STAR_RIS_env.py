@@ -70,7 +70,7 @@ class STAR_RIS_env(object):
         返回值：无
         """
         """位置信息"""
-        self.BS_loc = [[-20, 20]]
+        self.BS_loc = [[-35, 35]]
         self.STAR_RIS_loc = [[0, 0]]
         self.indoor_user_loc, self.indoor_eve_loc, self.outdoor_user_loc, self.outdoor_eve_loc, self.target_loc = self.generate_loc()  # 生成各个坐标
         self.BS2STAR_RIS, self.BS2target, self.BS2outdoor_user, self.BS2outdoor_eve, self.STAR_RIS2outdoor_user, self.STAR_RIS2outdoor_eve, \
@@ -161,7 +161,7 @@ class STAR_RIS_env(object):
         reward = ((np.sum(R_sec)) ** 0.33 * np.sum(SNR_t) ** 0.33) / (np.linalg.norm(W, 'fro') ** 0.66)
         #如果R_sec中有小于0.2的只值，则reward为0
         for i in range(self.user_num):
-            if R_sec[i] < 0.1:
+            if R_sec[i] < 0.01:
                 reward = 0.5 * reward
                 break
         for i in range(self.target_num):

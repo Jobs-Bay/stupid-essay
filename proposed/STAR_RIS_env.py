@@ -50,7 +50,7 @@ class STAR_RIS_env(object):
         self.Phi_r = np.eye(self.element_num, dtype=complex)
         self.W = np.random.randn(self.antenna_num, self.antenna_num + self.user_num) + 1j * np.random.randn(self.antenna_num, self.antenna_num + self.user_num)
         """位置信息"""
-        self.BS_loc = [[-20, 20]]
+        self.BS_loc = [[-35, 35]]
         self.STAR_RIS_loc = [[0, 0]]
         self.indoor_user_loc, self.indoor_eve_loc, self.outdoor_user_loc, self.outdoor_eve_loc, self.target_loc = self.generate_loc()  # 生成各个坐标
         self.BS2STAR_RIS, self.BS2target, self.BS2user, self.BS2eve, self.STAR_RIS2outdoor_user, self.STAR_RIS2outdoor_eve, \

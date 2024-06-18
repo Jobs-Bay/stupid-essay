@@ -23,11 +23,11 @@ from conventional import STAR_RIS_env
 MAX_EPISODES = 1000
 # MAX_EPISODES = 50000
 
-LR_A = 0.001  # learning rate for actor
-LR_C = 0.002  # learning rate for critic
+LR_A = 0.0001  # learning rate for actor
+LR_C = 0.0002  # learning rate for critic
 # LR_A = 0.1  # learning rate for actor
 # LR_C = 0.2  # learning rate for critic
-GAMMA = 0.99  # optimal reward discount
+GAMMA = 0.5  # optimal reward discount
 # GAMMA = 0.999  # reward discount
 TAU = 0.01  # soft replacement
 VAR_MIN = 0.01
@@ -131,10 +131,10 @@ class DDPG(object):
 
 
 ###############################  training  ####################################
-np.random.seed(94)
-tf.set_random_seed(94)
+np.random.seed(15)
+tf.set_random_seed(15)
 
-env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=30, power_limit=14, target_num=4, eve_num=1)
+env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=30, power_limit=20, target_num=4, eve_num=1)
 MAX_EP_STEPS = 1000
 s_dim = env.state_dim
 a_dim = env.action_dim
@@ -214,12 +214,12 @@ for i in range(MAX_EPISODES):
 # np.save('avg_reward_list.npy', avg_reward_list)
 # np.save('ep_reward_list.npy', ep_reward_list)
 # 构建文件夹路径
-# folder_path = f"./DDPG/数据（备份）（备份）/proposed/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
-# folder_path = f"./DDPG/数据（备份）（备份）/random/alpha=0.45,beta=0.45,gamma=0.1/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power_limit},T={env.target_num},F={env.eve_num}"
-# folder_path = f"./DDPG/数据（备份）（备份）/proposed/alpha=0.33,beta=0.33,gamma=0.33/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
-# folder_path = f"./DDPG/数据（备份）（备份）/MRT/alpha=0.45,beta=0.45,gamma=0.1/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power_limit},T={env.target_num},F={env.eve_num}"
-# folder_path = f"./DDPG/数据（备份）（备份）/proposed_eta_objective/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
-folder_path = f"数据（备份）/RIS/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
+# folder_path = f"./DDPG/数据/proposed/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
+# folder_path = f"./DDPG/数据/random/alpha=0.45,beta=0.45,gamma=0.1/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power_limit},T={env.target_num},F={env.eve_num}"
+# folder_path = f"./DDPG/数据/proposed/alpha=0.33,beta=0.33,gamma=0.33/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
+# folder_path = f"./DDPG/数据/MRT/alpha=0.45,beta=0.45,gamma=0.1/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power_limit},T={env.target_num},F={env.eve_num}"
+# folder_path = f"./DDPG/数据/proposed_eta_objective/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
+folder_path = f"数据/RIS/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
 
 
 # 确保文件夹存在，如果不存在则创建

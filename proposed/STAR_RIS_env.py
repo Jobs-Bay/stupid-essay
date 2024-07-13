@@ -159,9 +159,9 @@ class STAR_RIS_env(object):
         # state = np.append(state, SNR_t)
 
         reward = ((np.sum(R_sec)) ** 0.33 * np.sum(SNR_t) ** 0.33) / (np.linalg.norm(W, 'fro') ** 0.66)
-        if np.min(R_sec) < 0.1:
+        if np.min(R_sec) < 0.1 and np.min(SNR_t) >= 1:
             epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)))
-        if np.min(SNR_t) < 1:
+        if np.min(SNR_t) < 1 and np.min(R_sec) >= 0.1:
             epsilon = np.exp(-0.1 * (1 - np.min(SNR_t)))
         if np.min(R_sec) < 0.1 and np.min(SNR_t) < 1:
             epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)) - (1 - np.min(SNR_t)))

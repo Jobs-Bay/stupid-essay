@@ -159,15 +159,22 @@ class STAR_RIS_env(object):
         # state = np.append(state, SNR_t)
 
         reward = ((np.sum(R_sec)) ** 0.33 * np.sum(SNR_t) ** 0.33) / (np.linalg.norm(W, 'fro') ** 0.66)
-        #如果R_sec中有小于0.2的只值，则reward为0
-        for i in range(self.user_num):
-            if R_sec[i] < 0.01:
-                reward = 0.5 * reward
-                break
-        for i in range(self.target_num):
-            if SNR_t[i] < 1:
-                reward = 0.5 * reward
-                break
+        if np.min(R_sec) < 0.1:
+            epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)))
+        if np.min(SNR_t) < 1:
+            epsilon = np.exp(-0.1 * (1 - np.min(SNR_t)))
+        if np.min(R_sec) < 0.1 and np.min(SNR_t) < 1:
+            epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)) - (1 - np.min(SNR_t)))
+        # for i in range(self.user_num):
+        #     if R_sec[i] < 0.1:
+        #         reward = -(0.1 - R_sec[i]) * reward
+        #         for j in range(self.target_num):
+        #             if SNR_t[j] < 1:
+        #                 reward = -((1 - SNR_t[j]) + (0.1 - R_sec[i])) * reward
+        #                 break
+        #         break
+        #     break
+        reward = reward * epsilon
 
         return state, reward, np.linalg.norm(W, 'fro') ** 2, np.sum(R_sec), np.sum(SNR_t), eta
 
@@ -210,18 +217,43 @@ class STAR_RIS_env(object):
         Phi_t = np.array([0] * self.element_num, dtype=complex)
         Phi_r = np.array([0] * self.element_num, dtype=complex)
         for i in range(self.element_num // 2):
-            theta_t[i] = np.arctan(Phi_t_imag[i] / Phi_t_real[i])
+            # theta_t[i] = np.arctan(Phi_t_imag[i] / Phi_t_real[i])
+            theta_t[i] = self.coordinate_angle(Phi_t_real[i], Phi_t_imag[i])
             # theta_r[i] = np.arctan(Phi_r_imag[i] / Phi_r_real[i])
             # beta_t[i] = np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
             # beta_r[i] = np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
             Phi_t[i] = math.sqrt(1) * math.cos(theta_t[i]) + 1j * math.sin(theta_t[i]) * math.sqrt(beta_t[i])
             # Phi_r[i] = math.sqrt(beta_r[i]) * math.cos(theta_r[i]) + 1j * math.sin(theta_r[i]) * math.sqrt(beta_r[i])
         for i in range(self.element_num // 2):
-            theta_r[i + self.element_num // 2] = np.arctan(Phi_r_imag[i] / Phi_r_real[i])
+            # theta_r[i + self.element_num // 2] = np.arctan(Phi_r_imag[i] / Phi_r_real[i])
+            theta_r[i] = self.coordinate_angle(Phi_r_real[i], Phi_r_imag[i])
             # beta_r[i] = np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
             Phi_r[i + self.element_num // 2] = math.sqrt(1) * math.cos(theta_r[i]) + 1j * math.sin(
                 theta_r[i]) * math.sqrt(beta_r[i])
         return Phi_t, Phi_r
+
+    def coordinate_angle(self, x, y):
+        """
+        函数用途：计算坐标的方位角
+        参数列表：x，y
+        返回值：方位角
+        """
+        if x > 0 and y > 0:
+            return math.atan(y / x)
+        elif x < 0 and y > 0:
+            return math.pi - math.atan(y / (-x))
+        elif x < 0 and y < 0:
+            return math.pi + math.atan((-y) / (-x))
+        elif x > 0 and y < 0:
+            return 2 * math.pi - math.atan((-y) / x)
+        elif x == 0 and y > 0:
+            return math.pi / 2
+        elif x == 0 and y < 0:
+            return 3 * math.pi / 2
+        elif x > 0 and y == 0:
+            return 0
+        elif x < 0 and y == 0:
+            return math.pi
 
     def get_pathloss(self):
         """

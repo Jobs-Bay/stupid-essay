@@ -38,7 +38,7 @@ class STAR_RIS_env(object):
         self.eve_num = eve_num
         self.indoor_eve_num = 0
         self.outdoor_eve_num = 1
-        self.action_dim = 4 * self.element_num + 2 * self.antenna_num * (self.antenna_num + self.user_num)
+        self.action_dim = 4 * self.element_num + 2 * self.antenna_num * (self.antenna_num + self.user_num) + 1
         # 由于star-ris的系数矩阵由两部分组成，一个是发射一个是反射的，所以有2*N个参数，因为神经网络只接受实数，所以将系数分为实部和虚部，所以有4*N个参数
         # 因为预编码矩阵是一个M*（M+K）的矩阵，同理，有2*M*（M+K）个参数
         # 外加一个功率分配因子
@@ -98,7 +98,7 @@ class STAR_RIS_env(object):
         参数列表：动作
         返回值：下一个状态、奖励、是否结束、其他信息
         """
-
+        epsilon = 1
         SNR_t = np.array([0] * self.target_num, dtype=float)
         SNR_e = np.array([0] * self.user_num, dtype=float)  # （窃听者+目标，用户）
         SNR_u = np.array([0] * self.user_num, dtype=float)
@@ -113,12 +113,12 @@ class STAR_RIS_env(object):
         W_real = action[4 * self.element_num:4 * self.element_num + self.antenna_num * (self.antenna_num + self.user_num)]
         W_imag = action[4 * self.element_num + self.antenna_num * (self.antenna_num + self.user_num):4 * self.element_num + self.antenna_num * (self.antenna_num + self.user_num) + self.antenna_num * (self.antenna_num + self.user_num)]
         # 取action最后一个元素，赋值给delta
-        # delta = np.abs(action[-1])
+        delta = np.abs(action[-1])
         W_before = W_real.reshape(self.antenna_num, self.antenna_num + self.user_num) + 1j * W_imag.reshape(self.antenna_num, self.antenna_num + self.user_num)
         Phi_t, Phi_r = self.normalize_Phi(Phi_t_real, Phi_t_imag, Phi_r_real, Phi_r_imag)
         self.Phi_t = Phi_t * np.eye(self.element_num, dtype=complex)
         self.Phi_r = Phi_r * np.eye(self.element_num, dtype=complex)
-        W = self.normalize_W(W_before, self.power_limit)
+        W = self.normalize_W(W_before, delta * self.power_limit)
         # 算每个目标上的雷达估计速率
         for i in range(self.target_num):
             h_dt = ((self.H_dt[:, i]).reshape(self.antenna_num, 1) + self.G @ self.Phi_r @ self.H_rt[:, i].reshape(self.element_num, 1)) @(self.H_dt[:, i].reshape(self.antenna_num, 1) + self.G @ self.Phi_r @ self.H_rt[:, i].reshape(self.element_num, 1)).T
@@ -159,12 +159,12 @@ class STAR_RIS_env(object):
         # state = np.append(state, SNR_t)
 
         reward = ((np.sum(R_sec)) ** 0.33 * np.sum(SNR_t) ** 0.33) / (np.linalg.norm(W, 'fro') ** 0.66)
-        if np.min(R_sec) < 0.1:
+        if np.min(R_sec) < 0.1 and np.min(SNR_t) >= 1:
             epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)))
-        if np.min(SNR_t) < 1:
+        if np.min(SNR_t) < 1 and np.min(R_sec) >= 0.1:
             epsilon = np.exp(-0.1 * (1 - np.min(SNR_t)))
         if np.min(R_sec) < 0.1 and np.min(SNR_t) < 1:
-            epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)) - (1 - np.min(SNR_t)))
+            epsilon = np.exp(-0.1 * ((0.1 - np.min(R_sec)) + (1 - np.min(SNR_t))))
         # for i in range(self.user_num):
         #     if R_sec[i] < 0.1:
         #         reward = -(0.1 - R_sec[i]) * reward
@@ -198,7 +198,7 @@ class STAR_RIS_env(object):
         # 创建一个大小为天线数*（天线数+用户数）的元素都为1+1j的复矩阵，赋值给W_max
         W_max = np.ones((self.antenna_num, self.antenna_num + self.user_num)) + 1j * np.ones((self.antenna_num, self.antenna_num + self.user_num))
         # P_max除以W_max的F范数，并赋值给λ
-        λ = P_max / (np.linalg.norm(W_max, 'fro')) ** 2
+        λ = P_max / (np.linalg.norm(W_before, 'fro')) ** 2
         W_after = W_before * math.sqrt(λ)
         # λ = P_max / (np.linalg.norm(W_max, 'fro'))
         # W_after = W_before * λ
@@ -221,12 +221,8 @@ class STAR_RIS_env(object):
             # theta_r[i] = np.arctan(Phi_r_imag[i] / Phi_r_real[i])
             theta_t[i] = self.coordinate_angle(Phi_t_real[i], Phi_t_imag[i])
             theta_r[i] = self.coordinate_angle(Phi_r_real[i], Phi_r_imag[i])
-            beta_t[i] = np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) / (
-                        np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(
-                    Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
-            beta_r[i] = np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2) / (
-                        np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(
-                    Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
+            beta_t[i] = np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
+            beta_r[i] = np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
             Phi_t[i] = math.sqrt(beta_t[i]) * math.cos(theta_t[i]) + 1j * math.sin(theta_t[i]) * math.sqrt(beta_t[i])
             Phi_r[i] = math.sqrt(beta_r[i]) * math.cos(theta_r[i]) + 1j * math.sin(theta_r[i]) * math.sqrt(beta_r[i])
         return Phi_t, Phi_r
@@ -314,9 +310,9 @@ class STAR_RIS_env(object):
         outdoor_user_loc = np.vstack((outdoor_user_loc_x, outdoor_user_loc_y)).T
         outdoor_eve_loc = np.vstack((outdoor_eve_loc_x, outdoor_eve_loc_y)).T
         # 室外目标的位置横坐标取值范围为[-30,-5]
-        target_loc_x = np.random.randint(-15, -4, self.target_num)
+        target_loc_x = np.random.randint(-30, -25, self.target_num)
         # 室外目标的位置纵坐标取值范围为[-10, 0]
-        target_loc_y = np.random.randint(0, 6, self.target_num)
+        target_loc_y = np.random.randint(25, 30, self.target_num)
         target_loc = np.vstack((target_loc_x, target_loc_y)).T
 
         return indoor_user_loc, indoor_eve_loc, outdoor_user_loc, outdoor_eve_loc, target_loc

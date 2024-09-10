@@ -141,7 +141,7 @@ class DDPG(object):
 
 ###############################  training  ####################################
 np.random.seed(1578)
-tf.compat.v1.set_random_seed(1578)
+tf.set_random_seed(1578)
 
 env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=30, power_limit=20, target_num=4, eve_num=1)
 MAX_EP_STEPS = 1000

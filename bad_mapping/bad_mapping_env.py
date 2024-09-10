@@ -98,7 +98,7 @@ class STAR_RIS_env(object):
         参数列表：动作
         返回值：下一个状态、奖励、是否结束、其他信息
         """
-
+        epsilon = 1
         SNR_t = np.array([0] * self.target_num, dtype=float)
         SNR_e = np.array([0] * self.user_num, dtype=float)  # （窃听者+目标，用户）
         SNR_u = np.array([0] * self.user_num, dtype=float)
@@ -164,7 +164,7 @@ class STAR_RIS_env(object):
         if np.min(SNR_t) < 1:
             epsilon = np.exp(-0.1 * (1 - np.min(SNR_t)))
         if np.min(R_sec) < 0.1 and np.min(SNR_t) < 1:
-            epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)) - (1 - np.min(SNR_t)))
+            epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)) - 0.1 * (1 - np.min(SNR_t)))
         # for i in range(self.user_num):
         #     if R_sec[i] < 0.1:
         #         reward = -(0.1 - R_sec[i]) * reward
@@ -314,9 +314,9 @@ class STAR_RIS_env(object):
         outdoor_user_loc = np.vstack((outdoor_user_loc_x, outdoor_user_loc_y)).T
         outdoor_eve_loc = np.vstack((outdoor_eve_loc_x, outdoor_eve_loc_y)).T
         # 室外目标的位置横坐标取值范围为[-30,-5]
-        target_loc_x = np.random.randint(-15, -4, self.target_num)
+        target_loc_x = np.random.randint(-30, -25, self.target_num)
         # 室外目标的位置纵坐标取值范围为[-10, 0]
-        target_loc_y = np.random.randint(0, 6, self.target_num)
+        target_loc_y = np.random.randint(25, 30, self.target_num)
         target_loc = np.vstack((target_loc_x, target_loc_y)).T
 
         return indoor_user_loc, indoor_eve_loc, outdoor_user_loc, outdoor_eve_loc, target_loc

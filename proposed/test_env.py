@@ -98,7 +98,7 @@ class STAR_RIS_env(object):
         参数列表：动作
         返回值：下一个状态、奖励、是否结束、其他信息
         """
-
+        epsilon = 1
         SNR_t = np.array([0] * self.target_num, dtype=float)
         SNR_e = np.array([0] * self.user_num, dtype=float)  # （窃听者+目标，用户）
         SNR_u = np.array([0] * self.user_num, dtype=float)
@@ -159,9 +159,9 @@ class STAR_RIS_env(object):
         # state = np.append(state, SNR_t)
 
         reward = ((np.sum(R_sec)) ** 0.33 * np.sum(SNR_t) ** 0.33) / (np.linalg.norm(W, 'fro') ** 0.66)
-        if np.min(R_sec) < 0.1:
+        if np.min(R_sec) < 0.1 and np.min(SNR_t) >= 1:
             epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)))
-        if np.min(SNR_t) < 1:
+        if np.min(SNR_t) < 1 and np.min(R_sec) >= 0.1:
             epsilon = np.exp(-0.1 * (1 - np.min(SNR_t)))
         if np.min(R_sec) < 0.1 and np.min(SNR_t) < 1:
             epsilon = np.exp(-0.1 * (0.1 - np.min(R_sec)) - (1 - np.min(SNR_t)))
@@ -216,20 +216,15 @@ class STAR_RIS_env(object):
         beta_r = np.array([0] * self.element_num, dtype=float)
         Phi_t = np.array([0] * self.element_num, dtype=complex)
         Phi_r = np.array([0] * self.element_num, dtype=complex)
-        for i in range(self.element_num // 2):
+        for i in range(self.element_num):
             # theta_t[i] = np.arctan(Phi_t_imag[i] / Phi_t_real[i])
-            theta_t[i] = self.coordinate_angle(Phi_t_real[i], Phi_t_imag[i])
             # theta_r[i] = np.arctan(Phi_r_imag[i] / Phi_r_real[i])
-            # beta_t[i] = np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
-            # beta_r[i] = np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
-            Phi_t[i] = math.sqrt(1) * math.cos(theta_t[i]) + 1j * math.sin(theta_t[i]) * math.sqrt(beta_t[i])
-            # Phi_r[i] = math.sqrt(beta_r[i]) * math.cos(theta_r[i]) + 1j * math.sin(theta_r[i]) * math.sqrt(beta_r[i])
-        for i in range(self.element_num // 2):
-            # theta_r[i + self.element_num // 2] = np.arctan(Phi_r_imag[i] / Phi_r_real[i])
+            theta_t[i] = self.coordinate_angle(Phi_t_real[i], Phi_t_imag[i])
             theta_r[i] = self.coordinate_angle(Phi_r_real[i], Phi_r_imag[i])
-            # beta_r[i] = np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
-            Phi_r[i + self.element_num // 2] = math.sqrt(1) * math.cos(theta_r[i]) + 1j * math.sin(
-                theta_r[i]) * math.sqrt(beta_r[i])
+            beta_t[i] = np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
+            beta_r[i] = np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2) / (np.sqrt(Phi_t_real[i] ** 2 + Phi_t_imag[i] ** 2) + np.sqrt(Phi_r_real[i] ** 2 + Phi_r_imag[i] ** 2))
+            Phi_t[i] = math.sqrt(beta_t[i]) * math.cos(theta_t[i]) + 1j * math.sin(theta_t[i]) * math.sqrt(beta_t[i])
+            Phi_r[i] = math.sqrt(beta_r[i]) * math.cos(theta_r[i]) + 1j * math.sin(theta_r[i]) * math.sqrt(beta_r[i])
         return Phi_t, Phi_r
 
     def coordinate_angle(self, x, y):
@@ -299,25 +294,25 @@ class STAR_RIS_env(object):
         """
         # 生成用户、目标和窃听者的位置其中用户分为室内和室外用户，窃听者分为室内和室外窃听者，目标只有室外目标
         # 室内用户的位置横坐标取值范围为[5,11],室内窃听者[5,11]
-        indoor_user_loc_x = np.random.randint(0, 6, self.indoor_user_num)
+        indoor_user_loc_x = np.random.randint(0, 3, self.indoor_user_num)
         indoor_eve_loc_x = np.random.randint(5, 11, self.indoor_eve_num)
         # 室内用户坐标纵坐标取值范围为[0,5],室内窃听者[0,5]
-        indoor_user_loc_y = np.random.randint(0, 6, self.indoor_user_num)
+        indoor_user_loc_y = np.random.randint(18, 19, self.indoor_user_num)
         indoor_eve_loc_y = np.random.randint(0, 6, self.indoor_eve_num)
         indoor_user_loc = np.vstack((indoor_user_loc_x, indoor_user_loc_y)).T
         indoor_eve_loc = np.vstack((indoor_eve_loc_x, indoor_eve_loc_y)).T
         # 室外用户的位置横坐标取值范围为[-15,-10],室外窃听者[-15,-10]
         outdoor_user_loc_x = np.random.randint(-15, -4, self.outdoor_user_num)
-        outdoor_eve_loc_x = np.random.randint(-5, 1, self.outdoor_eve_num)
+        outdoor_eve_loc_x = np.random.randint(-20, -18, self.outdoor_eve_num)
         # 室外用户坐标纵坐标取值范围为[0, 10],室外窃听者[0,10]
         outdoor_user_loc_y = np.random.randint(5, 19, self.outdoor_user_num)
-        outdoor_eve_loc_y = np.random.randint(-10, -4, self.outdoor_eve_num)
+        outdoor_eve_loc_y = np.random.randint(0, 4, self.outdoor_eve_num)
         outdoor_user_loc = np.vstack((outdoor_user_loc_x, outdoor_user_loc_y)).T
         outdoor_eve_loc = np.vstack((outdoor_eve_loc_x, outdoor_eve_loc_y)).T
         # 室外目标的位置横坐标取值范围为[-30,-5]
-        target_loc_x = np.random.randint(-15, -4, self.target_num)
+        target_loc_x = np.random.randint(-25, -20, self.target_num)
         # 室外目标的位置纵坐标取值范围为[-10, 0]
-        target_loc_y = np.random.randint(-5, 1, self.target_num)
+        target_loc_y = np.random.randint(20, 25, self.target_num)
         target_loc = np.vstack((target_loc_x, target_loc_y)).T
 
         return indoor_user_loc, indoor_eve_loc, outdoor_user_loc, outdoor_eve_loc, target_loc
@@ -335,50 +330,42 @@ class STAR_RIS_env(object):
         H_dt_LOS = np.zeros((self.antenna_num, self.target_num), dtype=complex)
         for i in range(self.target_num):
             for n in range(self.antenna_num):
-                H_dt_LOS[n, i] = self.PL_BS2target[i] * np.cos(-n * math.pi * np.sin(self.BS2target[i])) - \
-                                 self.PL_BS2target[i] * 1j * np.sin(-n * math.pi * np.sin(self.BS2target[i]))
+                H_dt_LOS[n, i] = self.PL_BS2target[i] * np.cos(n * math.pi * np.sin(self.BS2target[i])) + self.PL_BS2target[i] * 1j * np.sin(n * math.pi * np.sin(self.BS2target[i]))
         H_dt = H_dt_LOS
 
         # 生成一个大小为天线数*元素数的复矩阵，其中每一列的元素为cos(-n*pi*sin(BS2STAR_RIS))-1j*sin(-n*pi*sin(BS2STAR_RIS))，赋值给G
         G = np.zeros((self.antenna_num, self.element_num), dtype=complex)
         for i in range(self.element_num):
             for n in range(self.antenna_num):
-                G[n, i] = self.PL_BS2STAR_RIS * np.cos(
-                    -n * math.pi * np.sin(self.BS2STAR_RIS)) - self.PL_BS2STAR_RIS * 1j * np.sin(
-                    -n * math.pi * np.sin(self.BS2STAR_RIS))
+                G[n, i] = self.PL_BS2STAR_RIS * np.cos(n * math.pi * np.sin(self.BS2STAR_RIS)) + self.PL_BS2STAR_RIS * 1j * np.sin(n * math.pi * np.sin(self.BS2STAR_RIS))
 
         # 生成一个大小为天线数*用户数的服从复高斯分布的矩阵，赋值给H_du_outdoor
         H_du = np.zeros((self.antenna_num, self.user_num), dtype=complex)
         for i in range(self.user_num):
             for n in range(self.antenna_num):
-                H_du[n, i] = self.PL_BS2user[i] * np.cos(-n * math.pi * np.sin(self.BS2user[i])) - self.PL_BS2user[
-                    i] * 1j * np.sin(-n * math.pi * np.sin(self.BS2user[i]))
+                H_du[n, i] = self.PL_BS2user[i] * np.cos(n * math.pi * np.sin(self.BS2user[i])) + self.PL_BS2user[i] * 1j * np.sin(n * math.pi * np.sin(self.BS2user[i]))
 
         H_de = np.zeros((self.antenna_num, self.eve_num), dtype=complex)
         for i in range(self.eve_num):
             for n in range(self.antenna_num):
-                H_de[n, i] = self.PL_BS2eve[i] * np.cos(-n * math.pi * np.sin(self.BS2eve[i])) - self.PL_BS2eve[
-                    i] * 1j * np.sin(-n * math.pi * np.sin(self.BS2eve[i]))
+                H_de[n, i] = self.PL_BS2eve[i] * np.cos(n * math.pi * np.sin(self.BS2eve[i])) + self.PL_BS2eve[
+                    i] * 1j * np.sin(n * math.pi * np.sin(self.BS2eve[i]))
 
         """STAR-RIS侧"""
         # 生成一个大小为元素数*目标数的复矩阵，其中每一列的元素为cos(-n*pi*sin(STAR_RIS2target[i]))-1j*sin(-n*pi*sin(STAR_RIS2target[i]))，赋值给H_rt_LOS
         H_rt_LOS = np.zeros((self.element_num, self.target_num), dtype=complex)
         for i in range(self.target_num):
             for n in range(self.element_num):
-                H_rt_LOS[n, i] = self.PL_STAR_RIS2target[i] * np.cos(-n * math.pi * np.sin(self.STAR_RIS2target[i])) - \
-                                 self.PL_STAR_RIS2target[i] * 1j * np.sin(
-                    -n * math.pi * np.sin(self.STAR_RIS2target[i]))
+                H_rt_LOS[n, i] = self.PL_STAR_RIS2target[i] * np.cos(n * math.pi * np.sin(self.STAR_RIS2target[i])) + self.PL_STAR_RIS2target[i] * 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2target[i]))
         H_rt = H_rt_LOS
 
         # 生成一个大小为元素数*室外用户数的复矩阵，其中每一列的元素为cos(-n*pi*sin(STAR_RIS2outdoor_user[i]))-1j*sin(-n*pi*sin(STAR_RIS2outdoor_user[i]))，赋值给H_ru_LOS
         H_ru_LOS = np.zeros((self.element_num, self.outdoor_user_num), dtype=complex)
         for i in range(self.outdoor_user_num):
             for n in range(self.element_num):
-                H_ru_LOS[n, i] = np.cos(-n * math.pi * np.sin(self.STAR_RIS2outdoor_user[i])) - 1j * np.sin(
-                    -n * math.pi * np.sin(self.STAR_RIS2outdoor_user[i]))
+                H_ru_LOS[n, i] = np.cos(n * math.pi * np.sin(self.STAR_RIS2outdoor_user[i])) + 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2outdoor_user[i]))
         # 生成一个大小为元素数*室外用户数的服从高斯分布的复矩阵，赋值给H_ru_NLOS
-        H_ru_NLOS = np.random.randn(self.element_num, self.outdoor_user_num) + 1j * np.random.randn(self.element_num,
-                                                                                                    self.outdoor_user_num)
+        H_ru_NLOS = np.random.randn(self.element_num, self.outdoor_user_num) + 1j * np.random.randn(self.element_num, self.outdoor_user_num)
         H_ru_outdoor = math.sqrt(self.K / (self.K + 1)) * H_ru_LOS + math.sqrt(1 / (self.K + 1)) * H_ru_NLOS
         for i in range(self.outdoor_user_num):
             for n in range(self.element_num):
@@ -388,11 +375,9 @@ class STAR_RIS_env(object):
         H_ru_LOS = np.zeros((self.element_num, self.indoor_user_num), dtype=complex)
         for i in range(self.indoor_user_num):
             for n in range(self.element_num):
-                H_ru_LOS[n, i] = np.cos(-n * math.pi * np.sin(self.STAR_RIS2indoor_user[i])) - 1j * np.sin(
-                    -n * math.pi * np.sin(self.STAR_RIS2indoor_user[i]))
+                H_ru_LOS[n, i] = np.cos(n * math.pi * np.sin(self.STAR_RIS2indoor_user[i])) + 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2indoor_user[i]))
         # 生成一个大小为元素数*室外用户数的服从高斯分布的复矩阵，赋值给H_ru_NLOS
-        H_ru_NLOS = np.random.randn(self.element_num, self.indoor_user_num) + 1j * np.random.randn(self.element_num,
-                                                                                                   self.indoor_user_num)
+        H_ru_NLOS = np.random.randn(self.element_num, self.indoor_user_num) + 1j * np.random.randn(self.element_num, self.indoor_user_num)
         H_ru_indoor = math.sqrt(self.K / (self.K + 1)) * H_ru_LOS + math.sqrt(1 / (self.K + 1)) * H_ru_NLOS
         for i in range(self.indoor_user_num):
             for n in range(self.element_num):
@@ -404,26 +389,21 @@ class STAR_RIS_env(object):
         H_rf_LOS = np.zeros((self.element_num, self.outdoor_eve_num), dtype=complex)
         for i in range(self.outdoor_eve_num):
             for n in range(self.element_num):
-                H_rf_LOS[n, i] = np.cos(-n * math.pi * np.sin(self.STAR_RIS2outdoor_eve[i])) - 1j * np.sin(
-                    -n * math.pi * np.sin(self.STAR_RIS2outdoor_eve[i]))
+                H_rf_LOS[n, i] = np.cos(n * math.pi * np.sin(self.STAR_RIS2outdoor_eve[i])) + 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2outdoor_eve[i]))
         # 生成一个大小为元素数*室外窃听者数的服从高斯分布的复矩阵
-        H_rf_NLOS = np.random.randn(self.element_num, self.outdoor_eve_num) + 1j * np.random.randn(self.element_num,
-                                                                                                   self.outdoor_eve_num)
-        H_rf_outdoor = self.PL_STAR_RIS2outdoor_eve * math.sqrt(self.K / (self.K + 1)) * H_rf_LOS + math.sqrt(
-            1 / (self.K + 1)) * H_rf_NLOS
+        H_rf_NLOS = np.random.randn(self.element_num, self.outdoor_eve_num) + 1j * np.random.randn(self.element_num, self.outdoor_eve_num)
+        H_rf_outdoor = self.PL_STAR_RIS2outdoor_eve * math.sqrt(self.K / (self.K + 1)) * H_rf_LOS + math.sqrt(1 / (self.K + 1)) * H_rf_NLOS
         # 生成一个大小为元素数*室内窃听者数的复矩阵，其中每一列的元素为cos(-n*pi*sin(STAR_RIS2indoor_eve[i]))-1j*sin(-n*pi*sin(STAR_RIS2indoor_eve[i]))，赋值给H_rf_LOS
         H_rf_LOS = np.zeros((self.element_num, self.indoor_eve_num), dtype=complex)
         for i in range(self.indoor_eve_num):
             for n in range(self.element_num):
-                H_rf_LOS[n, i] = np.cos(-n * math.pi * np.sin(self.STAR_RIS2indoor_eve[i])) - 1j * np.sin(
-                    -n * math.pi * np.sin(self.STAR_RIS2indoor_eve[i]))
+                H_rf_LOS[n, i] = np.cos(n * math.pi * np.sin(self.STAR_RIS2indoor_eve[i])) + 1j * np.sin(n * math.pi * np.sin(self.STAR_RIS2indoor_eve[i]))
         # 生成一个大小为元素数*室内窃听者数的服从高斯分布的复矩阵
-        H_rf_NLOS = np.random.randn(self.element_num, self.indoor_eve_num) + 1j * np.random.randn(self.element_num,
-                                                                                                  self.indoor_eve_num)
-        H_rf_indoor = self.PL_STAR_RIS2indoor_eve * math.sqrt(self.K / (self.K + 1)) * H_rf_LOS + math.sqrt(
-            1 / (self.K + 1)) * H_rf_NLOS
+        H_rf_NLOS = np.random.randn(self.element_num, self.indoor_eve_num) + 1j * np.random.randn(self.element_num, self.indoor_eve_num)
+        H_rf_indoor = self.PL_STAR_RIS2indoor_eve * math.sqrt(self.K / (self.K + 1)) * H_rf_LOS + math.sqrt(1 / (self.K + 1)) * H_rf_NLOS
         # 将H_rf_outdoor和H_rf_indoor拼接在一起，赋值给H_rf
         H_rf = np.hstack((H_rf_outdoor, H_rf_indoor))
+
 
         return H_dt, G, H_du, H_de, H_rt, H_ru, H_rf
 
@@ -469,45 +449,34 @@ class STAR_RIS_env(object):
         STAR_RIS2indoor_eve = np.array([0] * self.indoor_eve_num, dtype=float)
 
         # BS2STAR_RIS = abs(math.atan2(self.STAR_RIS_loc[0][1] - self.BS_loc[0][1], self.STAR_RIS_loc[0][0] - self.BS_loc[0][0]))
-        BS2STAR_RIS = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1], self.STAR_RIS_loc[0][0],
-                                        self.STAR_RIS_loc[0][1])
+        BS2STAR_RIS = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1], self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1])
         for i in range(self.target_num):
             # BS2target[i] = abs(math.atan2(self.target_loc[i][1] - self.BS_loc[0][1], self.target_loc[i][0] - self.BS_loc[0][0]))
-            BS2target[i] = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1], self.target_loc[i][0],
-                                             self.target_loc[i][1])
+            BS2target[i] = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1], self.target_loc[i][0], self.target_loc[i][1])
         for i in range(self.outdoor_user_num):
             # BS2outdoor_user[i] = abs(math.atan2(self.outdoor_user_loc[i][1] - self.BS_loc[0][1], self.outdoor_user_loc[i][0] - self.BS_loc[0][0]))
-            BS2user[i] = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1], self.outdoor_user_loc[i][0],
-                                           self.outdoor_user_loc[i][1])
+            BS2user[i] = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1], self.outdoor_user_loc[i][0], self.outdoor_user_loc[i][1])
         for i in range(self.indoor_user_num):
             # BS2outdoor_user[i] = abs(math.atan2(self.outdoor_user_loc[i][1] - self.BS_loc[0][1], self.outdoor_user_loc[i][0] - self.BS_loc[0][0]))
-            BS2user[i + self.outdoor_user_num] = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1],
-                                                                   self.indoor_user_loc[i][0],
-                                                                   self.indoor_user_loc[i][1])
+            BS2user[i + self.outdoor_user_num] = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1], self.indoor_user_loc[i][0], self.indoor_user_loc[i][1])
         for i in range(self.outdoor_eve_num):
             # BS2outdoor_eve[i] = abs(math.atan2(self.outdoor_eve_loc[i][1] - self.BS_loc[0][1], self.outdoor_eve_loc[i][0] - self.BS_loc[0][0]))
-            BS2eve[i] = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1], self.outdoor_eve_loc[i][0],
-                                          self.outdoor_eve_loc[i][1])
+            BS2eve[i] = self.azimuthAngle(self.BS_loc[0][0], self.BS_loc[0][1], self.outdoor_eve_loc[i][0], self.outdoor_eve_loc[i][1])
         for i in range(self.outdoor_user_num):
             # STAR_RIS2outdoor_user[i] = abs(math.atan2(self.outdoor_user_loc[i][1] - self.STAR_RIS_loc[0][1], self.outdoor_user_loc[i][0] - self.STAR_RIS_loc[0][0]))
-            STAR_RIS2outdoor_user[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1],
-                                                         self.outdoor_user_loc[i][0], self.outdoor_user_loc[i][1])
+            STAR_RIS2outdoor_user[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.outdoor_user_loc[i][0], self.outdoor_user_loc[i][1])
         for i in range(self.outdoor_eve_num):
             # STAR_RIS2outdoor_eve[i] = abs(math.atan2(self.outdoor_eve_loc[i][1] - self.STAR_RIS_loc[0][1], self.outdoor_eve_loc[i][0] - self.STAR_RIS_loc[0][0]))
-            STAR_RIS2outdoor_eve[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1],
-                                                        self.outdoor_eve_loc[i][0], self.outdoor_eve_loc[i][1])
+            STAR_RIS2outdoor_eve[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.outdoor_eve_loc[i][0], self.outdoor_eve_loc[i][1])
         for i in range(self.target_num):
             # STAR_RIS2target[i] = abs(math.atan2(self.target_loc[i][1] - self.STAR_RIS_loc[0][1], self.target_loc[i][0] - self.STAR_RIS_loc[0][0]))
-            STAR_RIS2target[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1],
-                                                   self.target_loc[i][0], self.target_loc[i][1])
+            STAR_RIS2target[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.target_loc[i][0], self.target_loc[i][1])
         for i in range(self.indoor_user_num):
             # STAR_RIS2indoor_user[i] = abs(math.atan2(self.indoor_user_loc[i][1] - self.STAR_RIS_loc[0][1], self.indoor_user_loc[i][0] - self.STAR_RIS_loc[0][0]))
-            STAR_RIS2indoor_user[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1],
-                                                        self.indoor_user_loc[i][0], self.indoor_user_loc[i][1])
+            STAR_RIS2indoor_user[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.indoor_user_loc[i][0], self.indoor_user_loc[i][1])
         for i in range(self.indoor_eve_num):
             # STAR_RIS2indoor_eve[i] = abs(math.atan2(self.indoor_eve_loc[i][1] - self.STAR_RIS_loc[0][1], self.indoor_eve_loc[i][0] - self.STAR_RIS_loc[0][0]))
-            STAR_RIS2indoor_eve[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1],
-                                                       self.indoor_eve_loc[i][0], self.indoor_eve_loc[i][1])
+            STAR_RIS2indoor_eve[i] = self.azimuthAngle(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.indoor_eve_loc[i][0], self.indoor_eve_loc[i][1])
 
         return BS2STAR_RIS, BS2target, BS2user, BS2eve, STAR_RIS2outdoor_user, STAR_RIS2outdoor_eve, STAR_RIS2target, STAR_RIS2indoor_user, STAR_RIS2indoor_eve
 
@@ -525,8 +494,7 @@ class STAR_RIS_env(object):
         参数列表：无
         返回值：BS到STAR-RIS、BS到目标、BS到室外用户、BS到室外窃听者、STAR-RIS到室外用户、STAR-RIS到室外窃听者、STAR-RIS到目标、STAR-RIS到室内用户、STAR-RIS到室内窃听者的距离
         """
-        BS2STAR_RIS = self.distance(self.BS_loc[0][0], self.BS_loc[0][1], self.STAR_RIS_loc[0][0],
-                                    self.STAR_RIS_loc[0][1])
+        BS2STAR_RIS = self.distance(self.BS_loc[0][0], self.BS_loc[0][1], self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1])
         BS2target = np.array([0] * self.target_num, dtype=float)
         BS2user = np.array([0] * self.user_num, dtype=float)
         BS2eve = np.array([0] * self.eve_num, dtype=float)
@@ -537,31 +505,61 @@ class STAR_RIS_env(object):
         STAR_RIS2indoor_eve = np.array([0] * self.indoor_eve_num, dtype=float)
 
         for i in range(self.target_num):
-            BS2target[i] = self.distance(self.BS_loc[0][0], self.BS_loc[0][1], self.target_loc[i][0],
-                                         self.target_loc[i][1])
+            BS2target[i] = self.distance(self.BS_loc[0][0], self.BS_loc[0][1], self.target_loc[i][0], self.target_loc[i][1])
         for i in range(self.outdoor_user_num):
-            BS2user[i] = self.distance(self.BS_loc[0][0], self.BS_loc[0][1], self.outdoor_user_loc[i][0],
-                                       self.outdoor_user_loc[i][1])
+            BS2user[i] = self.distance(self.BS_loc[0][0], self.BS_loc[0][1], self.outdoor_user_loc[i][0], self.outdoor_user_loc[i][1])
         for i in range(self.indoor_user_num):
-            BS2user[i + self.outdoor_user_num] = self.distance(self.BS_loc[0][0], self.BS_loc[0][1],
-                                                               self.indoor_user_loc[i][0], self.indoor_user_loc[i][1])
+            BS2user[i + self.outdoor_user_num] = self.distance(self.BS_loc[0][0], self.BS_loc[0][1], self.indoor_user_loc[i][0], self.indoor_user_loc[i][1])
         for i in range(self.eve_num):
-            BS2eve[i] = self.distance(self.BS_loc[0][0], self.BS_loc[0][1], self.outdoor_eve_loc[i][0],
-                                      self.outdoor_eve_loc[i][1])
+            BS2eve[i] = self.distance(self.BS_loc[0][0], self.BS_loc[0][1], self.outdoor_eve_loc[i][0], self.outdoor_eve_loc[i][1])
         for i in range(self.outdoor_user_num):
-            STAR_RIS2outdoor_user[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1],
-                                                     self.outdoor_user_loc[i][0], self.outdoor_user_loc[i][1])
+            STAR_RIS2outdoor_user[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.outdoor_user_loc[i][0], self.outdoor_user_loc[i][1])
         for i in range(self.outdoor_eve_num):
-            STAR_RIS2outdoor_eve[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1],
-                                                    self.outdoor_eve_loc[i][0], self.outdoor_eve_loc[i][1])
+            STAR_RIS2outdoor_eve[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.outdoor_eve_loc[i][0], self.outdoor_eve_loc[i][1])
         for i in range(self.target_num):
-            STAR_RIS2target[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.target_loc[i][0],
-                                               self.target_loc[i][1])
+            STAR_RIS2target[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.target_loc[i][0], self.target_loc[i][1])
         for i in range(self.indoor_user_num):
-            STAR_RIS2indoor_user[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1],
-                                                    self.indoor_user_loc[i][0], self.indoor_user_loc[i][1])
+            STAR_RIS2indoor_user[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.indoor_user_loc[i][0], self.indoor_user_loc[i][1])
         for i in range(self.indoor_eve_num):
-            STAR_RIS2indoor_eve[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1],
-                                                   self.indoor_eve_loc[i][0], self.indoor_eve_loc[i][1])
+            STAR_RIS2indoor_eve[i] = self.distance(self.STAR_RIS_loc[0][0], self.STAR_RIS_loc[0][1], self.indoor_eve_loc[i][0], self.indoor_eve_loc[i][1])
 
         return BS2STAR_RIS, BS2target, BS2user, BS2eve, STAR_RIS2outdoor_user, STAR_RIS2outdoor_eve, STAR_RIS2target, STAR_RIS2indoor_user, STAR_RIS2indoor_eve
+
+
+
+
+# env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=8, power_limit=30, target_num=4, eve_num=1)
+# a = np.random.rand(env.action_dim)
+# s, _, _, _, _, _ = env.step(a)
+# print(s)
+# print("")
+# print("基站到RIS的衰落：",env.PL_BS2STAR_RIS)
+# print("基站到目标的衰落：",env.PL_BS2target)
+# print("基站到用户的衰落：",env.PL_BS2user)
+# print("基站到窃听者的衰落：",env.PL_BS2eve)
+# print("RIS到用户的衰落：",env.PL_STAR_RIS2outdoor_user)
+# print("RIS到窃听者的衰落",env.PL_STAR_RIS2outdoor_eve)
+# print("RIS到目标的衰落：",env.PL_STAR_RIS2target)
+# print("RIS到室内用户的衰落：",env.PL_STAR_RIS2indoor_user)
+# print("RIS到室内窃听者的衰落：",env.PL_STAR_RIS2indoor_eve)
+# print("基站到用户的距离：",env.dBS2user)
+# print("基站到窃听者的距离：",env.dBS2eve)
+# print("基站到用户的信道：",env.H_du)
+# print("基站到窃听者的信道：",env.H_de)
+# #画出BS,STAR-RIS,user,eve,target的位置
+#
+# plt.scatter(env.BS_loc[0][0], env.BS_loc[0][1], c='r', marker='o', label='BS')
+# plt.scatter(env.STAR_RIS_loc[0][0], env.STAR_RIS_loc[0][1], c='b', marker='o', label='STAR-RIS')
+# for i in range(env.indoor_user_num):
+#     plt.scatter(env.indoor_user_loc[i][0], env.indoor_user_loc[i][1], c='g', marker='o', label='indoor_user')
+# for i in range(env.outdoor_user_num):
+#     plt.scatter(env.outdoor_user_loc[i][0], env.outdoor_user_loc[i][1], c='g', marker='o', label='outdoor_user')
+# for i in range(env.eve_num):
+#     plt.scatter(env.outdoor_eve_loc[i][0], env.outdoor_eve_loc[i][1], c='y', marker='o', label='outdoor_eve')
+# for i in range(env.target_num):
+#     plt.scatter(env.target_loc[i][0], env.target_loc[i][1], c='m', marker='o', label='target')
+# plt.legend()
+# plt.show()
+
+#生成一个长度为env.action_dim的随机数组
+

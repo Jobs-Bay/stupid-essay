@@ -18,16 +18,14 @@ import numpy as np
 from numpy import ndarray
 import time
 import matplotlib.pyplot as plt
-from FA_env import STAR_RIS_env
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # 这一行注释掉就是使用gpu，不注释就是使用cpu
+from STAR_RIS_env import STAR_RIS_env
 
 #####################  hyper parameters  ####################
-MAX_EPISODES = 1000
+MAX_EPISODES = 3000
 # MAX_EPISODES = 50000
-
-LR_A = 0.0001  # learning rate for actor
-LR_C = 0.0002  # learning rate for critic
+x = 25
+LR_A = 1e-5  # learning rate for actor
+LR_C = 1e-5  # learning rate for critic
 # LR_A = 0.1  # learning rate for actor
 # LR_C = 0.2  # learning rate for critic
 GAMMA = 0.5  # optimal reward discount
@@ -134,10 +132,11 @@ class DDPG(object):
 
 
 ###############################  training  ####################################
-np.random.seed(1571)
-tf.set_random_seed(1571)
+seed = 2
+np.random.seed(3407)
+tf.set_random_seed(seed)
 
-env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=30, power_limit=16, target_num=4, eve_num=1)
+env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=10, power_limit=0, target_num=10, eve_num=1)
 MAX_EP_STEPS = 1000
 s_dim = env.state_dim
 a_dim = env.action_dim
@@ -145,8 +144,9 @@ a_bound = [-1, 1]  # [-1,1]
 
 ddpg = DDPG(a_dim, s_dim, a_bound)
 
-# var = 1  # control exploration
-var = 0.01  # control exploration
+# var = 0.1  # control exploration
+var = 0.01
+# control exploration
 t1 = time.time()
 ep_reward_list = []
 avg_reward_list = []
@@ -155,6 +155,7 @@ rad_list_list = []
 sec_list_list = []
 eta_list_list = []
 a_list = []
+beta = 1
 # s_normal = StateNormalization()
 
 for i in range(MAX_EPISODES):
@@ -169,20 +170,12 @@ for i in range(MAX_EPISODES):
     P_list = []
     eta_list = []
     j = 0
+
     while j < MAX_EP_STEPS:
         # Add exploration noise
-        # a = ddpg.choose_action(s_normal.state_normal(s))
         a = ddpg.choose_action(s)
-        a = np.clip(np.random.normal(a, var), *a_bound)  # 高斯噪声add randomness to action selection for exploration
-        # s_, r, is_terminal, step_redo, offloading_ratio_change, reset_dist = env.step(a)
+        a = np.clip(a + beta * np.sqrt(var) * np.random.randn(a_dim), *a_bound)  # 高斯噪声add randomness to action selection for exploration
         s_, r, P, sum_sec, sum_rad, eta = env.step(a)
-        # if step_redo:
-        #     continue
-        # if reset_dist:
-        #     a[2] = -1
-        # if offloading_ratio_change:
-        #     a[3] = -1
-        # ddpg.store_transition(s_normal.state_normal(s), a, r, s_normal.state_normal(s_))  # 训练奖励缩小10倍
         ddpg.store_transition(s, a, r, s_)  # 训练奖励缩小10倍
         if ddpg.pointer > MEMORY_CAPACITY:
             # var = max([var * 0.9997, VAR_MIN])  # decay the action randomness
@@ -193,36 +186,34 @@ for i in range(MAX_EPISODES):
         rad_list.append(sum_rad)
         sec_list.append(sum_sec)
         P_list.append(P)
-        # a_list.append(a)
+        a_list.append(a)
         # eta_list.append(eta)
         if j == MAX_EP_STEPS - 1:
-            print('Episode:', i, ' Steps: %2d' % j, ' Reward: %7.2f' % ep_reward, 'Explore: %.3f' % var, 'Average reward: %.2f' % np.mean(ep_reward_list), 'episode eta: %.2f' % np.mean(eta_list_list))
+            print('Episode:', i, ' Steps: %2d' % j, ' Reward: %7.2f' % ep_reward, 'variance: %.3f' % np.var(ep_reward_list), 'Average reward: %.2f' % np.mean(ep_reward_list), 'episode eta: %.2f' % np.mean(eta_list_list))
             ep_reward_list = np.append(ep_reward_list, ep_reward)
             avg_reward_list = np.append(avg_reward_list, np.mean(ep_reward_list))
             rad_list_list.append(rad_list)
             sec_list_list.append(sec_list)
             P_list_list.append(P_list)
             eta_list_list.append(ep_eta)
-            # file_name = 'output_ddpg_' + str(self.bandwidth_nums) + 'MHz.txt'
-            # file_name = 'output.txt'
-            # with open(file_name, 'a') as file_obj:
-            #     file_obj.write("\n======== This episode is done ========" + "Episode:" + str(i) + "Reward" + str(ep_reward)+ "avg" + str(np.mean(ep_reward_list)))  # 本episode结束
             break
         j = j + 1
+    if i >= x:
+        batch = env.normalize_state(ep_reward_list[i - x:i - 1])
+        # 求ep_reward_list的方差
+        beta = np.var(batch)
+        # 取beta的自然对数
+        beta = np.exp(- beta)
+        print(beta)
+#save model
 
-    # # Evaluate episode
-    # if (i + 1) % 50 == 0:
-    #     eval_policy(ddpg, env)
+
+
 # 将ep_reward_list、avg_reward_list保存到文件中
 # np.save('avg_reward_list.npy', avg_reward_list)
 # np.save('ep_reward_list.npy', ep_reward_list)
 # 构建文件夹路径
-# folder_path = f"./DDPG/数据/proposed/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
-# folder_path = f"./DDPG/数据/random/alpha=0.45,beta=0.45,gamma=0.1/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power_limit},T={env.target_num},F={env.eve_num}"
-# folder_path = f"./DDPG/数据/proposed/alpha=0.33,beta=0.33,gamma=0.33/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
-# folder_path = f"./DDPG/数据/MRT/alpha=0.45,beta=0.45,gamma=0.1/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power_limit},T={env.target_num},F={env.eve_num}"
-# folder_path = f"./DDPG/数据/proposed_eta_objective/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
-folder_path = f"./数据/FA/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
+folder_path = f"数据/decay_random/x={x}/LA={LR_A},LC={LR_C},GAMMA={GAMMA}/M={env.antenna_num},K={env.user_num},N={env.element_num},P={env.power},T={env.target_num},F={env.eve_num}"
 
 
 # 确保文件夹存在，如果不存在则创建
@@ -232,7 +223,7 @@ file_path2 = os.path.join(folder_path, "rad_list_list.npy")
 file_path3 = os.path.join(folder_path, "sec_list_list.npy")
 file_path4 = os.path.join(folder_path, "P_list_list.npy")
 file_path5 = os.path.join(folder_path, "eta_list_list.npy")
-# file_path6 = os.path.join(folder_path, "a_list.npy")
+file_path6 = os.path.join(folder_path, "a_list.npy")
 np.save(file_path1, ep_reward_list)
 np.save(file_path2, rad_list_list)
 np.save(file_path3, sec_list_list)
@@ -247,8 +238,8 @@ plt.ylabel("Reward")
 plt.legend()
 print('Running time: ', time.time() - t1)
 plt.savefig(f"{folder_path}/ep_reward_list.png")
-
-# plt.plot(ep_reward_list)
-# plt.xlabel("Episode")
-# plt.ylabel("Reward")
-# plt.show()
+print(seed)
+os.makedirs(folder_path, exist_ok=True)
+saver = tf.train.Saver()
+saver.save(ddpg.sess, folder_path)
+print('Model saved')

@@ -1,135 +1,184 @@
 import matplotlib.pyplot as plt
+from matplotlib.lines import lineStyles
 
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
+plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 # 功率
-x_points1 = [-5, 0, 5, 10, 15]
-y_proposed1 = [522,	528,	573,	630,	661
-
+x_points1 = [-12 + i * 2 for i in range(9)]
+#左侧数据
+y_proposed1 = [
+4.675278418,
+5.017769462,
+5.340737685,
+5.586147343,
+5.784663468,
+5.940822007,
+6.056219085,
+6.140995036,
+6.20210169,
 ]
-y_japb_c1 = [535,	519,	546,	596,	630
-
-
+y_bm1 = [
+4.138271748,
+4.442887689,
+4.695218763,
+4.901220961,
+5.071297742,
+5.181879491,
+5.291725215,
+5.361351628,
+5.444826884
 ]
-y_japb_s1 = [0.477,	0.505,	0.547,	0.560,	0.562]
-y_RIS1 = [0.520, 0.525, 0.555, 0.587, 0.611]
-y_jpba_r1 = [300, 300, 300, 300, 300, 300, 300]
-y_cbbo1 = [195, 195, 195, 201, 201, 208, 227]
 
-plt.figure(figsize=(8, 6))
+y_wo1 = [
+4.116100385,
+4.300529248,
+4.432047816,
+4.502004776,
+4.546372864,
+4.575684076,
+4.596106367,
+4.612250468,
+4.626562452,
+]
+y_ddpg1 = [
+4.107794891,
+4.351880748,
+4.545978784,
+4.694634407,
+4.804176646,
+4.88297857,
+4.939917154,
+4.983326374,
+5.020641828,
+]
+#右侧数据
+y_proposed1r = [
+2.348846181,
+2.827549999,
+3.369007577,
+3.831405028,
+4.236410918,
+4.564180437,
+4.805430306,
+4.980180731,
+5.097815561
+]
+y_bm1r = [
+2.028642799,
+2.463185512,
+2.818244237,
+3.096908775,
+3.341086213,
+3.529330983,
+3.725263518,
+3.854704227,
+3.993953652
+]
 
-plt.plot(x_points1, y_proposed1, label='proposed', marker='o')
-plt.plot(x_points1, y_japb_c1, label='JAPB_C', marker='s')
-# plt.plot(x_points1, y_japb_s1, label='JAPB_S', marker='d')
-# plt.plot(x_points1, y_RIS1, label='RIS', marker='x')
-# plt.plot(x_points1, y_jpba_r1, label='Joint Power and Bandwidth Allocation for Sensing', marker='*')
-# plt.plot(x_points1, y_jtora1, label='Heuristic algorithm: Joint Task Offloading and Resource Allocation', marker='+')
+y_wo1r = [
+1.152003181,
+1.294977764,
+1.402267938,
+1.468376527,
+1.512484541,
+1.541868307,
+1.561470334,
+1.575206863,
+1.585153479
+]
+y_ddpg1r = [
+1.85763898,
+2.19691243,
+2.492612135,
+2.734897849,
+2.922249135,
+3.061477972,
+3.164008563,
+3.242625773,
+3.309840902
+]
+fig, ax1 = plt.subplots(figsize=(8, 6))
+ax1.plot(x_points1, y_proposed1, label='所提方案', marker='o')
+ax1.plot(x_points1, y_ddpg1, label='对比方案1', marker='s')
+ax1.plot(x_points1, y_bm1, label='对比方案2', marker='x')
+ax1.plot(x_points1, y_wo1, label='对比方案3', marker='*')
+ax1.set_xticks(x_points1)
+ax1.grid(False)
+ax1.set_xlabel('基站发射功率 (dBm)')
+ax1.set_ylabel('系统效用')
 
-plt.xlabel('Transmit Power Budget (dBm)')
-plt.ylabel('Average Utility')
-plt.title('Average Utility vs.Transmit Power Budget')
-plt.legend()
-plt.grid(True)
+ax2 = ax1.twinx()
+ax2.plot(x_points1, y_proposed1r, label='所提方案', marker='o',linestyle='--')
+ax2.plot(x_points1, y_ddpg1r, label='对比方案1', marker='s',linestyle='--')
+ax2.plot(x_points1, y_bm1r, label='对比方案2', marker='x',linestyle='--')
+ax2.plot(x_points1, y_wo1r, label='对比方案3', marker='*',linestyle='--')
+ax2.grid(False)
+ax2.set_ylabel('安全和速率(bit/s/Hz)')
+
+ax1.legend(loc='upper left')
+ax2.legend(loc='upper right')
 plt.show()
 
-# 用户数
-x_points2 = [2, 4, 6, 8, 10]
-y_proposed2 = [0.399,	0.618,	0.695,	0.742,	0.769]
-y_RIS2 = [0.387,	0.611,	0.677,	0.721,	0.752]
-y_japb_s2 = [0.360,	0.562,	0.650,	0.694, 0.723]
-y_japb_c2 = [0.359,	0.582,	0.670,	0.705,	0.728]
-y_jpba_r2 = [325, 310, 260, 245, 252, 270]
-y_cbbo2 = [195, 161, 141, 128, 128, 128]
-
+#效用单独图
 plt.figure(figsize=(8, 6))
-
-plt.plot(x_points2, y_proposed2, label='proposed', marker='o')
-plt.plot(x_points2, y_japb_c2, label='JAPB_C', marker='s')
-plt.plot(x_points2, y_japb_s2, label='JAPB_S', marker='d')
-plt.plot(x_points2, y_RIS2, label='RIS', marker='x')
-# plt.plot(x_points2, y_jpba_r2, label='Joint Power and Bandwidth Allocation for Sensing', marker='*')
-# plt.plot(x_points2, y_jtora2, label='Heuristic algorithm: Joint Task Offloading and Resource Allocation', marker='+')
-
-plt.xlabel('Number of legitimate users')
-plt.ylabel('Average Utility')
-plt.title('Average Utility vs. Number of legitimate users')
+plt.plot(x_points1, y_proposed1, label='所提方案', marker='o')
+plt.plot(x_points1, y_ddpg1, label='对比方案1', marker='s')
+plt.plot(x_points1, y_bm1, label='对比方案2', marker='x')
+plt.plot(x_points1, y_wo1, label='对比方案3', marker='*')
+plt.xticks(x_points1)
+plt.xlabel('基站发射功率 (dBm)')
+plt.ylabel('系统效用')
 plt.legend()
-plt.grid(True)
+plt.grid(False)
 plt.show()
-#
-# N
-x_points3 = [10 + i * 10 for i in range(5)]
-y_proposed3 = [0.558, 0.583, 0.596, 0.622, 0.637]
-y_RIS3 = [0.545,	0.558,	0.584,	0.599,	0.611]
-y_japb_c3 = [0.538,	0.550,	0.572,	0.592,	0.606]
-y_japb_s3 = [0.533, 0.545, 0.562, 0.577, 0.590]
-y_jpba_r3 = [160, 325, 475, 650, 800, 970]
-y_cbbo3 = [97, 195, 293, 393, 493, 593]
 
+#系统和安全速率单独图
 plt.figure(figsize=(8, 6))
-
-plt.plot(x_points3, y_proposed3, label='proposed', marker='o')
-plt.plot(x_points3, y_japb_c3, label='JAPB_C', marker='s')
-plt.plot(x_points3, y_japb_s3, label='JAPB_S', marker='d')
-plt.plot(x_points3, y_RIS3, label='RIS', marker='x')
-# plt.plot(x_points3, y_jpba_r3, label='Joint Power and Bandwidth Allocation for Sensing', marker='*')
-# plt.plot(x_points3, y_jtora3, label='Heuristic algorithm: Joint Task Offloading and Resource Allocation', marker='+')
-
-plt.xlabel('Number of elements at the STAR-RIS')
-plt.ylabel('Average Utility')
-plt.title('Average Utility vs. Number of elements at the STAR-RIS')
+plt.plot(x_points1, y_proposed1r, label='所提方案', marker='o')
+plt.plot(x_points1, y_ddpg1r, label='对比方案1', marker='s')
+plt.plot(x_points1, y_bm1r, label='对比方案2', marker='x')
+plt.plot(x_points1, y_wo1r, label='对比方案3', marker='*')
+plt.xticks(x_points1)
+plt.xlabel('基站发射功率 (dBm)')
+plt.ylabel('系统和安全速率(bit/s/Hz)')
 plt.legend()
-plt.grid(True)
+plt.grid(False)
 plt.show()
-#
-# rad vs p
-x_points4 = [-5, 0, 5, 10, 15]
-y_proposed4 = [0.058,	0.176,	0.602,	1.97,	6.62]
-y_japb_c4 = [0.049,	0.144,	0.46,	1.64,	4.89]
-y_japb_s4 = [0.054,	0.162,	0.606,	1.65,	5.65]
-y_jpba_c4 = [140, 190, 220, 250, 268, 280]
-y_jpba_r4 = [296, 297, 305, 320, 325, 340]
-y_cbbo4 = [119, 128, 162, 195, 229, 262]
 
+
+# 单元数
+x_points2 = [10 + i * 10 for i in range(4)]
+y_proposed2 = [5.032294332, 5.498373219, 6.20210169, 6.42107105]
+y_ddpg2 = [4.21122605, 4.566922197, 5.020641828, 5.242149502737958]
+y_wo2 = [3.73122303, 4.044242564, 4.626562452, 4.802465013]
+y_bm2=[4.731103781, 4.935822848, 5.362418225, 5.653988832]
 plt.figure(figsize=(8, 6))
-
-plt.plot(x_points4, y_proposed4, label='proposed', marker='o')
-plt.plot(x_points4, y_japb_c4, label='JAPB_C', marker='s')
-plt.plot(x_points4, y_japb_s4, label='JAPB_S', marker='d')
-# plt.plot(x_points4, y_jpba_c4, label='Joint Power and Bandwidth Allocation for Communication', marker='x')
-# plt.plot(x_points4, y_jpba_r4, label='Joint Power and Bandwidth Allocation for Sensing', marker='*')
-# plt.plot(x_points4, y_jtora4, label='Heuristic algorithm: Joint Task Offloading and Resource Allocation', marker='+')
-
-plt.xlabel('Transmit power budget (dBm)')
-plt.ylabel('radar estimation rate (bps/Hz)')
-plt.title('radar estimation rate (bps/Hz) vs. Transmit power budget (dBm)')
+plt.plot(x_points2, y_proposed2, label='所提方案', marker='o')
+plt.plot(x_points2, y_ddpg2, label='对比方案1', marker='s')
+plt.plot(x_points2, y_bm2, label='对比方案2', marker='x')
+plt.plot(x_points2, y_wo2, label='对比方案3', marker='*')
+plt.xticks(x_points2)
+plt.xlabel('STAR-RIS单元个数')
+plt.ylabel('系统效用')
 plt.legend()
-plt.grid(True)
+plt.grid(False)
 plt.show()
-#
-# sec vs p
-x_points5 = [-5, 0, 5, 10, 15]
-y_proposed5 = [1.020,	1.147,	1.212,	1.350,	1.443]
-y_japb_c5 = [1.077,	1.241,	1.438,	1.478,	1.559]
-y_japb_s5 = [0.863,	1.065,	1.128,	1.325,	1.327]
-y_RIS5 = [982.9335645614436,
-1016.6559396562636,
-1209.0421868449384,
-1374.6986767489677,
-1421.1080595855667]
-y_jpba_r5 = [325, 635, 895, 1227, 1600]
-y_cbbo5 = [195, 397, 598, 799, 1010]
+
+# 感知目标数
+x_points3 = [2 + i * 2 for i in range(5)]
+y_proposed3 = [3.966880948, 5.032294332, 6.615313112, 8.281715925, 9.281630418]
+y_ddpg3=[3.253151643, 4.21122605, 5.627602855, 7.388409602, 8.420011985]
+y_wo3=[3.211521951, 3.73122303, 4.179145126, 4.64860605, 5.06874446]
+y_bm3=[3.525144216, 4.731103781, 5.926185913, 7.59543257, 8.89142234]
 
 plt.figure(figsize=(8, 6))
-
-plt.plot(x_points5, y_proposed5, label='proposed', marker='o')
-plt.plot(x_points5, y_japb_c5, label='JAPB_C', marker='s')
-plt.plot(x_points5, y_japb_s5, label='JAPB_S', marker='d')
-# plt.plot(x_points1, y_RIS5, label='RIS', marker='x')
-# plt.plot(x_points5, y_jpba_r5, label='Joint Power and Bandwidth Allocation for Sensing', marker='*')
-# plt.plot(x_points5, y_jtora5, label='Heuristic algorithm: Joint Task Offloading and Resource Allocation', marker='+')
-
-plt.xlabel('Transmit power budget (dBm)')
-plt.ylabel('Secrecy Rate (bps/Hz)')
-plt.title('Secrecy Rate vs. Transmit power budget')
+plt.plot(x_points3, y_proposed3, label='所提方案', marker='o')
+plt.plot(x_points3, y_ddpg3, label='对比方案1', marker='s')
+plt.plot(x_points3, y_bm3, label='对比方案2', marker='x')
+plt.plot(x_points3, y_wo3, label='对比方案3', marker='*')
+plt.xticks(x_points3)
+plt.xlabel('感知目标个数')
+plt.ylabel('系统效用')
 plt.legend()
-plt.grid(True)
+plt.grid(False)
 plt.show()

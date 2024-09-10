@@ -1,11 +1,12 @@
 import os
 import shutil
-
+from brokenaxes import brokenaxes
 import numpy as np
 import matplotlib.pyplot as plt
 # from DDPG.bad_mapping_env import STAR_RIS_env
 from proposed.STAR_RIS_env import STAR_RIS_env
-
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
+plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 os.chmod('reproduce.py', 0o777)
 env = STAR_RIS_env(antenna_num=4, user_num=4, element_num=30, power_limit=30, target_num=4, eve_num=1)
 #读取npy文件
@@ -13,10 +14,10 @@ def read_npy(file_path):
     data = np.load(file_path)
     return data
 
-data1 = read_npy('proposed/数据/utility_targ_not_eve/LA=0.0001,LC=0.0001,GAMMA=0.001/M=4,K=4,N=30,P=30,T=4,F=1/rad_list_list.npy')
-# data2 = read_npy('DDPG/DDPG/数据/utility_targ_not_eve/LA=0.0001,LC=0.0001,GAMMA=0.001/M=10,K=8,N=30,P=20,T=4,F=4/rad_list_list.npy')
-# data3 = read_npy('DDPG/DDPG/数据/bad_mapping/LA=0.0001,LC=0.0001,GAMMA=0.001/M=10,K=8,N=30,P=35,T=4,F=4/ep_reward_list.npy')
-# data4 = read_npy('DDPG/DDPG/数据/bad_mapping/LA=0.0001,LC=0.0001,GAMMA=0.001/M=10,K=8,N=30,P=40,T=4,F=4/ep_reward_list.npy')
+data1 = read_npy('ddpg/数据/decay_random/LA=1e-05,LC=1e-05,GAMMA=0.5/M=4,K=4,N=30,P=0,T=4,F=1/ep_reward_list.npy')
+data2 = read_npy('proposed/数据/decay_random/x=25/LA=1e-05,LC=1e-05,GAMMA=0.5/M=4,K=4,N=30,P=0,T=4,F=1/ep_reward_list.npy')
+data3 = read_npy('proposed/数据/decay_random/LA=1e-06,LC=1e-06,GAMMA=0.5/M=4,K=4,N=30,P=0,T=4,F=1/ep_reward_list.npy')
+data4 = read_npy('proposed/数据/decay_random/x=25/LA=1e-05,LC=1e-05,GAMMA=0.5/M=4,K=4,N=30,P=0,T=4,F=1/ep_reward_list.npy')
 # data5 = read_npy('DDPG/DDPG/数据/bad_mapping/LA=0.0001,LC=0.0002,GAMMA=0.001/M=10,K=8,N=30,P=40,T=4,F=4/ep_reward_list.npy')
 # data6 = read_npy('DDPG/DDPG/数据/bad_mapping/LA=0.0001,LC=0.0002,GAMMA=0.001/M=10,K=8,N=30,P=10,T=4,F=4/ep_reward_list.npy')
 # data7 = read_npy('DDPG/DDPG/数据/bad_mapping/LA=0.0001,LC=0.0002,GAMMA=0.001/M=10,K=8,N=30,P=30,T=4,F=4/ep_reward_list.npy')
@@ -86,22 +87,22 @@ for i in range(len(data1)):
     # avg1.append(np.sum(data1[i]))
 
     temp.append(np.sum(data1[i]))
-    avg1.append(np.mean(temp[max(0, i-1000):i+1]))  #计算滑动窗口平均
-# temp = []
-# for i in range(len(data2)):
-#
-#     temp.append(np.sum(data2[i]))
-#     avg2.append(np.mean(temp[max(0, i-1000):i+1]))  #计算滑动窗口平均
-# temp = []
-# for i in range(len(data3)):
-#
-#     temp.append(np.sum(data3[i]))
-#     avg3.append(np.mean(temp[max(0, i-1000):i+1]))  #计算滑动窗口平均
-# temp = []
-# for i in range(len(data4)):
-#
-#     temp.append(np.sum(data4[i]))
-#     avg4.append(np.mean(temp[max(0, i-1000):i+1]))  #计算滑动窗口平均
+    avg1.append(np.mean(temp[max(0, i-100):i+1]))  #计算滑动窗口平均
+temp = []
+for i in range(len(data2)):
+
+    temp.append(np.sum(data2[i]))
+    avg2.append(np.mean(temp[max(0, i-100):i+1]))  #计算滑动窗口平均
+temp = []
+for i in range(len(data3)):
+
+    temp.append(np.sum(data3[i]))
+    avg3.append(np.mean(temp[max(0, i-100):i+1]))  #计算滑动窗口平均
+temp = []
+for i in range(len(data4)):
+
+    temp.append(np.sum(data4[i]))
+    avg4.append(np.mean(temp[max(0, i-100):i+1]))  #计算滑动窗口平均
 # temp = []
 # for i in range(len(data5)):
 #     temp.append(np.sum(data5[i]))
@@ -149,39 +150,35 @@ print(avg1[999])
 # temp = max(avg9)
 # print(avg9[999])
 #画图
-# plt.plot(avg1, label='lr_a=0.0001,lr_c=0.0002', color='blue')
-# plt.plot(avg2, label='lr_a=0.001,lr_c=0.002', color='red')
-# plt.plot(avg3, label='lr_a=0.00001,lr_c=0.00002', color='green')
-# plt.plot(avg4, label='2.5', color='yellow')
+plt.figure(figsize=(8, 6))
+# plt.plot(avg1, label='x=20', color='blue')
+# plt.plot(avg2, label='x=25', color='red')
+# plt.plot(avg3, label='x=30', color='green')
+bax = brokenaxes(
+                 ylims=((0, 2000), (3000, 16000)),  # 设置y轴裂口范围
+                 hspace=0.1,  # y轴裂口宽度
+                 despine=True,  # 是否y轴只显示一个裂口
+                 diag_color='r',  # 裂口斜线颜色
+                 )
+bax.plot(avg1, label='所提方案去掉自适应动作噪声', color='blue')
+bax.plot(avg2, label='所提方案', color='red')
+# bax.plot(avg3, label='学习率=0.000001', color='green')
+# bax.plot()
+# plt.plot(avg4, label='x=100', color='black')
 # plt.plot(avg5, label='5', color='black')
 # plt.plot(avg6, label='7.5', color='purple')
 # plt.plot(avg7, label='10', color='orange')
 # plt.plot(avg8, label='20', color='pink')
 # plt.plot(avg9, label='15', color='brown')
-
-# plt.xlabel('Episode')
-# plt.ylabel('Average Reward')
+# plt.xlabel('回合数')
+# plt.ylabel('平均奖励')
+bax.legend(loc=3)
+bax.set_xlabel('回合数')
+bax.set_ylabel('累计奖励')
 # plt.legend()
-# plt.show()
-
-def decode_W(data):
-    W_j = []
-    W_real = data[19999][4 * env.element_num:4 * env.element_num + env.antenna_num * (env.antenna_num + env.user_num)]
-    W_imag = data[19999][4 * env.element_num + env.antenna_num * (
-                env.antenna_num + env.user_num):4 * env.element_num + env.antenna_num * (
-                env.antenna_num + env.user_num) + env.antenna_num * (env.antenna_num + env.user_num)]
-    W_before = W_real.reshape(env.antenna_num, env.antenna_num + env.user_num) + 1j * W_imag.reshape(
-        env.antenna_num, env.antenna_num + env.user_num)
-
-    W = env.normalize_W(W_before, np.abs(data[560439][-1]) * env.power_limit)
-    # W = env.normalize_W(W_before, env.power_limit)
-    for i in range(env.antenna_num + env.user_num):
-        W_j.append(np.linalg.norm(W[:, i]) ** 2)
-    return W_j
-#[0.05523541523603342, 0.05472175921283506, 0.05510731128341555, 0.055222747644426695, 0.055116538876930736, 0.05501841179571963, 0.05477317693417103, 0.05474838360015017, 0.05490678289136646, 0.05510505990564684, 0.05500736659198873, 0.05507103268397, 0.055315108873935016, 0.0553730564332471, 0.055184487167768824, 0.05520592755966988, 0.055189472136402275, 0.05503152869133251]
+plt.show()
 
 
-# W = decode_W(data10)
-# print(np.sum(W))
-# print(W)
+
+
 
